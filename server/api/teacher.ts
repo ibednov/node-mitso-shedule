@@ -11,7 +11,11 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    await runScript(teacherName);
+    const subjects = await runScript(teacherName);
+    if (subjects.length === 0) {
+      event.res.statusCode = 404;
+      return { error: `No subjects found for teacher ${teacherName}` };
+    }
     return { success: true };
   } catch (error) {
     event.res.statusCode = 500;

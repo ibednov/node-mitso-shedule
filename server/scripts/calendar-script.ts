@@ -31,15 +31,27 @@ interface Schedule {
 
 const getSubjects = async (teacherName: string): Promise<{ name: string }[]> => {
     const teacherNameEncoded: string = encodeURIComponent(teacherName);
-    const response = await axios.get(`${apiBaseUrl}/teacher-subjects?teacher=${teacherNameEncoded}`);
-    return response.data;
+    try {
+        const response = await axios.get(`${apiBaseUrl}/teacher-subjects?teacher=${teacherNameEncoded}`);
+        console.log(`Ответ от API для предметов преподавателя ${teacherName}:`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`Ошибка при получении предметов для преподавателя ${teacherName}:`, error);
+        throw error;
+    }
 };
 
 const getSchedule = async (teacherName: string, subject: string): Promise<Schedule> => {
     const teacherNameEncoded: string = encodeURIComponent(teacherName);
     const subjectEncoded: string = encodeURIComponent(subject);
-    const response = await axios.get(`${apiBaseUrl}/teacher-subject-schedules?teacher=${teacherNameEncoded}&subject=${subjectEncoded}`);
-    return response.data;
+    try {
+        const response = await axios.get(`${apiBaseUrl}/teacher-subject-schedules?teacher=${teacherNameEncoded}&subject=${subjectEncoded}`);
+        console.log(`Ответ от API для расписания предмета ${subject} преподавателя ${teacherName}:`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`Ошибка при получении расписания для предмета ${subject} преподавателя ${teacherName}:`, error);
+        throw error;
+    }
 };
 
 const createCalendarEvents = (schedule: Schedule): { events: EventAttributes[], minDate: string | null, maxDate: string | null } => {
@@ -99,7 +111,7 @@ const saveCalendar = (events: EventAttributes[], minDate: string | null, maxDate
     });
 };
 
-export const runScript = async (teacherName: string): Promise<void> => {
+export const runScript = async (teacherName: string): Promise<{ name: string }[]> => {
     try {
         const subjects = await getSubjects(teacherName);
         console.log(`Получены предметы для преподавателя ${teacherName}:`, subjects);
@@ -123,7 +135,9 @@ export const runScript = async (teacherName: string): Promise<void> => {
 
         console.log(`Создано ${allEvents.length} событий. minDate: ${minDate}, maxDate: ${maxDate}`);
         saveCalendar(allEvents, minDate, maxDate, teacherName);
+        return subjects;
     } catch (error) {
         console.error('Ошибка:', error);
+        throw error;
     }
 };
