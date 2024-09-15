@@ -95,10 +95,11 @@ const createCalendarEvents = (schedule: Schedule): { events: EventAttributes[], 
     return { events, minDate, maxDate };
 };
 
-const saveCalendar = (events: EventAttributes[], minDate: string | null, maxDate: string | null, teacherName: string): void => {
+const saveCalendar = (events: EventAttributes[], minDate: string | null, maxDate: string | null, teacherName: string): string => {
     if (!fs.existsSync(path.join(__dirname, '../../results'))) {
         fs.mkdirSync(path.join(__dirname, '../../results'));
     }
+    let fileContent = '';
     createEvents(events, (error, value) => {
         if (error) {
             console.log(error);
@@ -107,11 +108,13 @@ const saveCalendar = (events: EventAttributes[], minDate: string | null, maxDate
         const fileName = `calendar_${teacherName}_${minDate}_to_${maxDate}.ics`;
         const filePath = path.join(__dirname, '../../results', fileName);
         fs.writeFileSync(filePath, value);
+        fileContent = value;
         console.log(`Файл календаря создан: ${filePath}`);
     });
+    return fileContent;
 };
 
-export const runScript = async (teacherName: string): Promise<{ name: string }[]> => {
+export const runScript = async (teacherName: string): Promise<{ subjects: { name: string }[], fileContent: string }> => {
     try {
         const subjects = await getSubjects(teacherName);
         console.log(`Получены предметы для преподавателя ${teacherName}:`, subjects);
@@ -134,8 +137,8 @@ export const runScript = async (teacherName: string): Promise<{ name: string }[]
         }
 
         console.log(`Создано ${allEvents.length} событий. minDate: ${minDate}, maxDate: ${maxDate}`);
-        saveCalendar(allEvents, minDate, maxDate, teacherName);
-        return subjects;
+        const fileContent = saveCalendar(allEvents, minDate, maxDate, teacherName);
+        return { subjects, fileContent };
     } catch (error) {
         console.error('Ошибка:', error);
         throw error;

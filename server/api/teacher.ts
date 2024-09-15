@@ -11,12 +11,12 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const subjects = await runScript(teacherName);
+    const { subjects, fileContent } = await runScript(teacherName);
     if (subjects.length === 0) {
       event.res.statusCode = 404;
       return { error: `No subjects found for teacher ${teacherName}` };
     }
-    return { success: true };
+    return { success: true, fileContent };
   } catch (error) {
     event.res.statusCode = 500;
     return { error: 'Internal Server Error' };
