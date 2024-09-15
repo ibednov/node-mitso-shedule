@@ -22,20 +22,12 @@
     bun install
     ```
 
-    ```bash
-    pnpm install
-    ```
-
-    ```bash
-    npm install
-    ```
-
 ## Использование
 
 1. Запустите скрипт для создания календаря:
 
     ```bash
-    node scripts/calendar-script.js
+    bun scripts/calendar-script.ts
     ```
 
 2. После выполнения скрипта, файл календаря будет создан в папке `results`.
