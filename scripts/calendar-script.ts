@@ -3,6 +3,7 @@ import fs from 'fs';
 import { createEvents, EventAttributes } from 'ics';
 import path from 'path';
 import { config } from 'dotenv';
+import { Schedule } from '../interfaces/calendar-script';
 
 config(); // Загружаем переменные окружения из .env
 
@@ -10,21 +11,6 @@ const apiBaseUrl: string = process.env.API_BASE_URL!;
 const teacherName: string = process.env.TEACHER_NAME!;
 const teacherNameEncoded: string = encodeURIComponent(teacherName);
 
-interface Lesson {
-    time: string;
-    date: string;
-    group_class: string;
-    auditorium: string;
-    subject: string;
-    teacher: string;
-    kurse: string;
-}
-
-interface Schedule {
-    [week: string]: {
-        [date: string]: Lesson[];
-    };
-}
 
 const getSubjects = async (): Promise<{ name: string }[]> => {
     const response = await axios.get(`${apiBaseUrl}/teacher-subjects?teacher=${teacherNameEncoded}`);
@@ -56,11 +42,17 @@ const createCalendarEvents = (schedule: Schedule): { events: EventAttributes[], 
                 const [endHour, endMinute] = lesson.time.split(' - ')[1].split(':').map(Number);
                 const [year, month, day] = lesson.date.split('-').map(Number);
 
+                // Проверка на корректность времени
+                if (isNaN(startHour) || isNaN(startMinute) || isNaN(endHour) || isNaN(endMinute)) {
+                    console.error(`Некорректное время для урока: ${lesson.subject} на дату ${lesson.date}`);
+                    return;
+                }
+
                 events.push({
                     start: [year, month, day, startHour, startMinute],
                     end: [year, month, day, endHour, endMinute],
                     title: `${lesson.group_class} / ${lesson.auditorium} / ${lesson.subject}`,
-                    description: `${lesson.subject} с ${lesson.teacher} в аудитории ${lesson.audиторium}\nГруппа: ${lesson.group_class}\nКурс: ${lesson.kurse}`,
+                    description: `${lesson.subject} с ${lesson.teacher} в аудитории ${lesson.auditorium}\nГруппа: ${lesson.group_class}\nКурс: ${lesson.kurse}`,
                     location: lesson.auditorium,
                     status: 'CONFIRMED',
                     busyStatus: 'BUSY',
@@ -81,10 +73,10 @@ const saveCalendar = (events: EventAttributes[], minDate: string | null, maxDate
             console.log(error);
             return;
         }
-        const fileName = `calendar_${minDate}_to_${maxDate}.ics`;
+        const fileName = `calendar_${teacherName}__${minDate}_to_${maxDate}.ics`;
         const filePath = path.join(__dirname, '../results', fileName);
         fs.writeFileSync(filePath, value);
-        console.log(`Файл календаря создан: $scripts/calendar-script.ts`);
+        console.log(`Файл календаря создан: ${filePath}`);
     });
 };
 
