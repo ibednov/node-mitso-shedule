@@ -3,21 +3,40 @@ import fs from 'fs';
 import { createEvents, EventAttributes } from 'ics';
 import path from 'path';
 import { config } from 'dotenv';
-import { Schedule } from '../interfaces/calendar-script';
+import { fileURLToPath } from 'url';
 
 config(); // Загружаем переменные окружения из .env
 
 const apiBaseUrl: string = process.env.API_BASE_URL!;
-const teacherName: string = process.env.TEACHER_NAME!;
-const teacherNameEncoded: string = encodeURIComponent(teacherName);
 
+// Получаем текущий путь к директории
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const getSubjects = async (): Promise<{ name: string }[]> => {
+interface Lesson {
+    time: string;
+    date: string;
+    group_class: string;
+    auditorium: string;
+    subject: string;
+    teacher: string;
+    kurse: string;
+}
+
+interface Schedule {
+    [week: string]: {
+        [date: string]: Lesson[];
+    };
+}
+
+const getSubjects = async (teacherName: string): Promise<{ name: string }[]> => {
+    const teacherNameEncoded: string = encodeURIComponent(teacherName);
     const response = await axios.get(`${apiBaseUrl}/teacher-subjects?teacher=${teacherNameEncoded}`);
     return response.data;
 };
 
-const getSchedule = async (subject: string): Promise<Schedule> => {
+const getSchedule = async (teacherName: string, subject: string): Promise<Schedule> => {
+    const teacherNameEncoded: string = encodeURIComponent(teacherName);
     const subjectEncoded: string = encodeURIComponent(subject);
     const response = await axios.get(`${apiBaseUrl}/teacher-subject-schedules?teacher=${teacherNameEncoded}&subject=${subjectEncoded}`);
     return response.data;
@@ -64,46 +83,47 @@ const createCalendarEvents = (schedule: Schedule): { events: EventAttributes[], 
     return { events, minDate, maxDate };
 };
 
-const saveCalendar = (events: EventAttributes[], minDate: string | null, maxDate: string | null): void => {
-    if (!fs.existsSync(path.join(__dirname, '../results'))) {
-        fs.mkdirSync(path.join(__dirname, '../results'));
+const saveCalendar = (events: EventAttributes[], minDate: string | null, maxDate: string | null, teacherName: string): void => {
+    if (!fs.existsSync(path.join(__dirname, '../../results'))) {
+        fs.mkdirSync(path.join(__dirname, '../../results'));
     }
     createEvents(events, (error, value) => {
         if (error) {
             console.log(error);
             return;
         }
-        const fileName = `calendar_${teacherName}__${minDate}_to_${maxDate}.ics`;
-        const filePath = path.join(__dirname, '../results', fileName);
+        const fileName = `calendar_${teacherName}_${minDate}_to_${maxDate}.ics`;
+        const filePath = path.join(__dirname, '../../results', fileName);
         fs.writeFileSync(filePath, value);
         console.log(`Файл календаря создан: ${filePath}`);
     });
 };
 
-const main = async (): Promise<void> => {
+export const runScript = async (teacherName: string): Promise<void> => {
     try {
-        const subjects = await getSubjects();
+        const subjects = await getSubjects(teacherName);
+        console.log(`Получены предметы для преподавателя ${teacherName}:`, subjects);
         let allEvents: EventAttributes[] = [];
         let minDate: string | null = null;
         let maxDate: string | null = null;
 
         for (const subject of subjects) {
-            const schedule = await getSchedule(subject.name);
+            const schedule = await getSchedule(teacherName, subject.name);
+            console.log(`Получено расписание для предмета ${subject.name}:`, schedule);
             const { events, minDate: subjectMinDate, maxDate: subjectMaxDate } = createCalendarEvents(schedule);
             allEvents = allEvents.concat(events);
 
-            if (!minDate || new Date(subjectMinDate!) < new Date(minDate)) {
+            if (!minDate || (subjectMinDate && new Date(subjectMinDate) < new Date(minDate))) {
                 minDate = subjectMinDate;
             }
-            if (!maxDate || new Date(subjectMaxDate!) > new Date(maxDate)) {
+            if (!maxDate || (subjectMaxDate && new Date(subjectMaxDate) > new Date(maxDate))) {
                 maxDate = subjectMaxDate;
             }
         }
 
-        saveCalendar(allEvents, minDate, maxDate);
+        console.log(`Создано ${allEvents.length} событий. minDate: ${minDate}, maxDate: ${maxDate}`);
+        saveCalendar(allEvents, minDate, maxDate, teacherName);
     } catch (error) {
         console.error('Ошибка:', error);
     }
 };
-
-main();

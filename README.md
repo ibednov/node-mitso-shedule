@@ -1,49 +1,75 @@
-# Node Mitso Schedule
+# Nuxt 3 Minimal Starter
 
-Этот проект предназначен для создания календаря на основе расписания преподавателя из системы MITSO.
+Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
 
-## Структура проекта
+## Setup
 
-- `scripts/` - папка, содержащая скрипты.
-- `results/` - папка, в которую сохраняются результаты выполнения скриптов.
+Make sure to install the dependencies:
 
-## Установка
+```bash
+# npm
+npm install
 
-1. Клонируйте репозиторий:
+# pnpm
+pnpm install
 
-    ```bash
-    git clone https://github.com/ibednov/node-mitso-schedule.git
-    cd node-mitso-schedule
-    ```
+# yarn
+yarn install
 
-2. Установите зависимости:
+# bun
+bun install
+```
 
-    ```bash
-    bun install
-    ```
+## Development Server
 
-## Использование
+Start the development server on `http://localhost:3000`:
 
-1. Запустите скрипт для создания календаря:
+```bash
+# npm
+npm run dev
 
-    ```bash
-    bun scripts/calendar-script.ts
-    ```
+# pnpm
+pnpm run dev
 
-2. После выполнения скрипта, файл календаря будет создан в папке `results`.
+# yarn
+yarn dev
 
+# bun
+bun run dev
+```
 
-## Требования
+## Production
 
-- Node.js
-- packet manager (например, Bun)
+Build the application for production:
 
-## Зависимости
+```bash
+# npm
+npm run build
 
-- [axios](https://www.npmjs.com/package/axios) - для выполнения HTTP-запросов.
-- [ics](https://www.npmjs.com/package/ics) - для создания файлов календаря.
-- [fs](https://nodejs.org/api/fs.html) - для работы с файловой системой.
+# pnpm
+pnpm run build
 
-## Лицензия
+# yarn
+yarn build
 
-Этот проект лицензирован под лицензией MIT. Подробности смотрите в файле [LICENSE](LICENSE).
+# bun
+bun run build
+```
+
+Locally preview production build:
+
+```bash
+# npm
+npm run preview
+
+# pnpm
+pnpm run preview
+
+# yarn
+yarn preview
+
+# bun
+bun run preview
+```
+
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
