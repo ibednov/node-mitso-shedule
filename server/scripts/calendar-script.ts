@@ -111,7 +111,7 @@ const saveCalendar = (events: EventAttributes[], minDate: string | null, maxDate
     });
 };
 
-export const runScript = async (teacherName: string): Promise<{ name: string }[]> => {
+export const runScript = async (teacherName: string, selectedWeeks: string[]): Promise<{ name: string }[]> => {
     try {
         const subjects = await getSubjects(teacherName);
         console.log(`Получены предметы для преподавателя ${teacherName}:`, subjects);
@@ -122,7 +122,16 @@ export const runScript = async (teacherName: string): Promise<{ name: string }[]
         for (const subject of subjects) {
             const schedule = await getSchedule(teacherName, subject.name);
             console.log(`Получено расписание для предмета ${subject.name}:`, schedule);
-            const { events, minDate: subjectMinDate, maxDate: subjectMaxDate } = createCalendarEvents(schedule);
+
+            // Фильтруем расписание по выбранным неделям
+            const filteredSchedule: Schedule = {};
+            for (const week of selectedWeeks) {
+                if (schedule[week]) {
+                    filteredSchedule[week] = schedule[week];
+                }
+            }
+
+            const { events, minDate: subjectMinDate, maxDate: subjectMaxDate } = createCalendarEvents(filteredSchedule);
             allEvents = allEvents.concat(events);
 
             if (!minDate || (subjectMinDate && new Date(subjectMinDate) < new Date(minDate))) {
@@ -140,4 +149,19 @@ export const runScript = async (teacherName: string): Promise<{ name: string }[]
         console.error('Ошибка:', error);
         throw error;
     }
+};
+
+
+export const getAvailableWeeks = async (teacherName: string): Promise<string[]> => {
+    const subjects = await getSubjects(teacherName);
+    let weeksSet = new Set<string>();
+
+    for (const subject of subjects) {
+        const schedule = await getSchedule(teacherName, subject.name);
+        for (const week in schedule) {
+            weeksSet.add(week);
+        }
+    }
+
+    return Array.from(weeksSet);
 };
