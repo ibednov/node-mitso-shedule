@@ -69,8 +69,10 @@ const createCalendarEvents = (schedule: Schedule): { events: EventAttributes[], 
             }
 
             schedule[week][date].forEach((lesson) => {
-                const [startHour, startMinute] = lesson.time.split(' - ')[0].split(':').map(Number);
-                const [endHour, endMinute] = lesson.time.split(' - ')[1].split(':').map(Number);
+                // Заменяем точки и запятые на двоеточия
+                const normalizedTime = lesson.time.replace(/[.,]/g, ':');
+                const [startHour, startMinute] = normalizedTime.split(' - ')[0].split(':').map(Number);
+                const [endHour, endMinute] = normalizedTime.split(' - ')[1].split(':').map(Number);
                 const [year, month, day] = lesson.date.split('-').map(Number);
 
                 // Проверка на корректность времени
