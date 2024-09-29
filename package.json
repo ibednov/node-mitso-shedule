@@ -21,6 +21,7 @@
     "ics": "^3.7.6",
     "micro": "^10.0.1",
     "nuxt": "^3.13.0",
+    "tailwind-variants": "^0.2.1",
     "vue": "latest",
     "vue-router": "latest"
   },

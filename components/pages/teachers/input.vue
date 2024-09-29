@@ -61,38 +61,70 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="teacher-input">
-        <h1>Введите ФИО преподавателя</h1>
-        <input
-            v-model="teacherName"
-            placeholder="ФИО преподавателя"
+    <div
+        v-auto-animate
+        self-center
+        flex="~ col"
+        gap="8"
+    >
+        <div
+            flex="~ col"
+            gap="4"
         >
-        <button @click="submitTeacherName">
-            Отправить
-        </button>
-
-        <div v-if="availableWeeks.length > 0">
-            <h2>Выберите недели</h2>
             <div
-                v-for="week in availableWeeks"
-                :key="week"
+                text="2xl"
+                font="bold"
             >
-                <input
-                    v-model="selectedWeeks"
-                    type="checkbox"
-                    :value="week"
-                > {{ week }}
+                Введите ФИО преподавателя
             </div>
-            <button @click="submitSelectedWeeks">
-                Сохранить выбранные недели
-            </button>
+            <div
+                flex
+                gap-2
+            >
+                <ui-input-text
+                    v-model="teacherName"
+                    placeholder="ФИО преподавателя"
+                />
+                <ui-button @click="submitTeacherName">
+                    Отправить
+                </ui-button>
+            </div>
         </div>
 
-        <p
-            v-if="errorMessage"
-            class="error"
+        <div
+            v-if="availableWeeks.length > 0"
+            flex="~ col"
+            gap="6"
         >
+            <div
+                flex="~ col"
+                gap="4"
+            >
+                <div
+                    text="2xl"
+                    font="bold"
+                >
+                    Выберите недели
+                </div>
+                {{ selectedWeeks }}
+                <div
+                    v-for="week in availableWeeks"
+                    :key="week"
+                >
+                    <ui-input-checkbox
+                        v-model="selectedWeeks"
+                        :value="week"
+                        :label="week"
+                    />
+                </div>
+            </div>
+            <ui-button @click="submitSelectedWeeks">
+                Сохранить выбранные недели
+            </ui-button>
+        </div>
+
+        <div v-if="errorMessage">
             {{ errorMessage }}
-        </p>
+        </div>
     </div>
 </template>
