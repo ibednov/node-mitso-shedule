@@ -1,7 +1,7 @@
 {
   "name": "nuxt-app",
-  "private": true,
   "type": "module",
+  "private": true,
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -10,15 +10,34 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@formkit/auto-animate": "^0.8.2",
+    "@nuxt/typescript-build": "^3.0.2",
+    "@types/axios": "^0.14.0",
+    "@types/dotenv": "^8.2.0",
     "@types/micro": "^10.0.0",
+    "@types/node": "^22.5.5",
+    "@unocss/nuxt": "^0.63.1",
+    "axios": "^1.7.7",
+    "ics": "^3.7.6",
     "micro": "^10.0.1",
     "nuxt": "^3.13.0",
     "vue": "latest",
-    "vue-router": "latest",
-    "@types/axios": "^0.14.0",
-    "@types/dotenv": "^8.2.0",
-    "@types/node": "^22.5.5",
-    "axios": "^1.7.7",
-    "ics": "^3.7.6"
+    "vue-router": "latest"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^2.26.0",
+    "@iconify-json/ph": "^1.1.13",
+    "@unocss/eslint-plugin": "^0.62.2",
+    "@unocss/preset-icons": "^0.61.0",
+    "eslint": "9.5.0",
+    "eslint-plugin-check-file": "^2.8.0",
+    "lint-staged": "^15.2.9",
+    "simple-git-hooks": "^2.11.1"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "cd front && npx bun run lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix"
   }
 }
