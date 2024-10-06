@@ -64,6 +64,8 @@ const getSchedule = async (teacherName: string, subject: string): Promise<Schedu
 
 const createCalendarEvents = (schedule: Schedule): { events: EventAttributes[], minDate: string | null, maxDate: string | null } => {
   const events: EventAttributes[] = []
+  const eventMap: Map<string, EventAttributes> = new Map()
+  const groupMap: Map<string, Set<string>> = new Map()
   let minDate: string | null = null
   let maxDate: string | null = null
 
@@ -79,34 +81,47 @@ const createCalendarEvents = (schedule: Schedule): { events: EventAttributes[], 
       schedule[week][date].forEach((lesson) => {
         console.warn(`Обработка урока: ${JSON.stringify(lesson)}`) // Добавлено для отладки
 
-        // Заменяем точки и запятые на двоеточия
         const normalizedTime = lesson.time.replace(/[.,]/g, ':')
         const [startHour, startMinute] = normalizedTime.split(' - ')[0].split(':').map(Number)
         const [endHour, endMinute] = normalizedTime.split(' - ')[1].split(':').map(Number)
         const [year, month, day] = lesson.date.split('-').map(Number)
 
-        // Проверка на корректность времени
         if (Number.isNaN(startHour) || Number.isNaN(startMinute) || Number.isNaN(endHour) || Number.isNaN(endMinute)) {
           console.error(`Некорректное время для урока: ${lesson.subject} на дату ${lesson.date}`)
           return
         }
 
-        // Проверка на наличие аудитории
         const auditorium = lesson.auditorium.trim() || 'аудитория не указана'
+        const eventKey = `${date}-${normalizedTime}-${lesson.subject}`
 
-        events.push({
-          start: [year, month, day, startHour, startMinute],
-          end: [year, month, day, endHour, endMinute],
-          title: `${lesson.group_class} / ${auditorium} / ${lesson.subject}`,
-          description: `${lesson.subject} с ${lesson.teacher} в аудитории ${auditorium}\nГруппа: ${lesson.group_class}\nКурс: ${lesson.kurse}`,
-          location: auditorium,
-          status: 'CONFIRMED',
-          busyStatus: 'BUSY',
-        })
+        if (eventMap.has(eventKey)) {
+          const existingEvent = eventMap.get(eventKey)!
+          existingEvent.description += `\nОбъединено с: ${lesson.group_class} / ${auditorium}`
+          existingEvent.title += ' (Объединено)'
+
+          // Обновление информации о группах
+          const groups = groupMap.get(eventKey)!
+          groups.add(lesson.group_class)
+          existingEvent.description = `${lesson.subject} с ${lesson.teacher} в аудитории ${auditorium}\nГруппа: ${Array.from(groups).join(' и ')}\nКурс: ${lesson.kurse}`
+        }
+        else {
+          const newEvent: EventAttributes = {
+            start: [year, month, day, startHour, startMinute],
+            end: [year, month, day, endHour, endMinute],
+            title: `${lesson.group_class} / ${auditorium} / ${lesson.subject}`,
+            description: `${lesson.subject} с ${lesson.teacher} в аудитории ${auditorium}\nГруппа: ${lesson.group_class}\nКурс: ${lesson.kurse}`,
+            location: auditorium,
+            status: 'CONFIRMED',
+            busyStatus: 'BUSY',
+          }
+          eventMap.set(eventKey, newEvent)
+          groupMap.set(eventKey, new Set([lesson.group_class]))
+        }
       })
     }
   }
 
+  events.push(...eventMap.values())
   return { events, minDate, maxDate }
 }
 
