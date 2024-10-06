@@ -17,6 +17,8 @@
     "@types/micro": "^10.0.0",
     "@types/node": "^22.5.5",
     "@unocss/nuxt": "^0.63.1",
+    "@vueuse/core": "^11.1.0",
+    "@vueuse/nuxt": "^11.1.0",
     "axios": "^1.7.7",
     "ics": "^3.7.6",
     "micro": "^10.0.1",

@@ -91,6 +91,8 @@ onMounted(() => {
             </div>
         </div>
 
+        {{ selectedWeeks }}
+
         <div
             v-if="availableWeeks.length > 0"
             flex="~ col"
@@ -106,12 +108,12 @@ onMounted(() => {
                 >
                     Выберите недели
                 </div>
-                {{ selectedWeeks }}
                 <div
                     v-for="week in availableWeeks"
                     :key="week"
                 >
                     <ui-input-checkbox
+                        :id="`checkbox-${week}`"
                         v-model="selectedWeeks"
                         :value="week"
                         :label="week"

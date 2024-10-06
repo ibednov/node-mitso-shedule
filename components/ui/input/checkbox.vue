@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { tv } from 'tailwind-variants'
-import { useVModel } from '@vueuse/core'
 
 interface CheckboxPropsType {
   color?: 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
-  modelValue: boolean
+  modelValue: string[] // Изменено на массив строк
+  value: string // Значение, которое будет добавлено в массив
   label?: string
+  id?: string
 }
 
 const props = withDefaults(defineProps<CheckboxPropsType>(), {
@@ -14,7 +15,22 @@ const props = withDefaults(defineProps<CheckboxPropsType>(), {
   size: 'md',
 })
 const emit = defineEmits(['update:modelValue'])
-const data = useVModel(props, 'modelValue', emit)
+
+const isChecked = computed(() => props.modelValue.includes(props.value))
+
+const toggleValue = () => {
+  const newValue = [...props.modelValue]
+  if (isChecked.value) {
+    const index = newValue.indexOf(props.value)
+    if (index > -1) {
+      newValue.splice(index, 1)
+    }
+  }
+  else {
+    newValue.push(props.value)
+  }
+  emit('update:modelValue', newValue)
+}
 
 const checkbox = tv({
   base: 'border rounded-full bg-black focus:outline-none focus:ring-2',
@@ -39,15 +55,15 @@ const checkbox = tv({
         gap-2
     >
         <input
-            id="default-checkbox"
-            v-model="data"
-            rounded-full
+            :id="id"
             type="checkbox"
+            :checked="isChecked"
             :class="checkbox({ size: props.size, color: props.color })"
+            @change="toggleValue"
         >
         <label
             v-if="props.label"
-            for="default-checkbox"
+            :for="id"
             :class="[`text-${props.size}`]"
             class="text-gray-900 font-medium"
         >{{ props.label }}</label>
