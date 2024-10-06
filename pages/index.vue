@@ -1,3 +1,9 @@
+<script setup lang="ts">
+definePageMeta({
+  layout: 'default',
+})
+</script>
+
 <template>
-    <pages />
+    <pages-main />
 </template>
