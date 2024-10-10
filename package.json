@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.8.2",
+    "@nuxt/icon": "^1.5.5",
     "@nuxt/typescript-build": "^3.0.2",
     "@types/axios": "^0.14.0",
     "@types/dotenv": "^8.2.0",

@@ -14,6 +14,7 @@ export default defineNuxtConfig({
   modules: [
     '@unocss/nuxt',
     '@formkit/auto-animate/nuxt',
+    '@nuxt/icon',
   ],
 
 })

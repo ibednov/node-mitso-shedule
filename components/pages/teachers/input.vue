@@ -1,30 +1,55 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+const teacherName = ref<string[]>(['Беднов А. О.', 'Беднов'])
 
-const teacherName = ref('')
-const errorMessage = ref('')
 const availableWeeks = ref<string[]>([])
 const selectedWeeks = ref<string[]>([])
 
+const state = ref({
+  errorMessage: '',
+  message: '',
+  status: '',
+  isFetching: false,
+})
+
+const clearFetchStatus = () => {
+  state.value.status = ''
+}
+const clearMessage = () => {
+  state.value.message = ''
+}
+
+const setFetching = (value: boolean) => {
+  state.value.isFetching = value
+}
+
 const fetchAvailableWeeks = async () => {
-  const { data, error } = await useFetch('/api/teacher', {
+  setFetching(true)
+  clearFetchStatus()
+  clearMessage()
+  const { data, error, status } = await useFetch('/api/teacher', {
     method: 'GET',
     params: { teacherName: teacherName.value },
   })
+  //  при 200 update fetchStatus
 
   if (error.value) {
     console.error('Ошибка:', error.value)
-    errorMessage.value = error.value.data.error
+    state.value.errorMessage = error.value.data.error
+    setFetching(false)
   }
   else {
     availableWeeks.value = data.value.weeks
+    if (data.value && status && status.value === 'success') {
+      state.value.status = `weeks_fetched_${status.value}`
+    }
+    setFetching(false)
   }
 }
 
 const submitTeacherName = async () => {
-  errorMessage.value = ''
+  state.value.errorMessage = ''
 
-  if (teacherName.value.trim() === '') {
+  if (teacherName.value[0].trim() === '') {
     console.warn('Пожалуйста, введите ФИО преподавателя')
     return
   }
@@ -33,7 +58,10 @@ const submitTeacherName = async () => {
 }
 
 const submitSelectedWeeks = async () => {
-  const { data, error } = await useFetch('/api/teacher', {
+  setFetching(true)
+  clearFetchStatus()
+  clearMessage()
+  const { data, error, status } = await useFetch('/api/teacher', {
     method: 'POST',
     body: JSON.stringify({ teacherName: teacherName.value, selectedWeeks: selectedWeeks.value }),
     headers: {
@@ -43,21 +71,41 @@ const submitSelectedWeeks = async () => {
 
   if (error.value) {
     console.error('Ошибка:', error.value)
-    errorMessage.value = error.value.data.error
+    state.value.errorMessage = error.value.data.error
     console.warn('Произошла ошибка при отправке данных')
   }
   else {
     console.warn('Успех:', data.value)
     console.warn('Данные успешно отправлены')
+    if (status && status.value === 'success') {
+      state.value.status = `weeks_saved_${status.value}`
+      selectedWeeks.value = []
+      availableWeeks.value = []
+      state.value.message = 'Недели успешно сохранены'
+    }
   }
+  setFetching(false)
 }
 
-onMounted(() => {
-  // Fetch available weeks when the component is mounted
-  if (teacherName.value.trim() !== '') {
-    fetchAvailableWeeks()
-  }
-})
+const addTeacher = () => {
+  teacherName.value.push('')
+}
+
+const updateTeacherName = (index: number, value: string) => {
+  teacherName.value[index] = value
+}
+
+const removeTeacher = (teacher: string) => {
+  // dont use .filter() by name because it will remove all teachers with the same name
+  teacherName.value = teacherName.value.filter(name => name !== teacher)
+}
+
+// onMounted(() => {
+//   // Fetch available weeks when the component is mounted
+//   // if (teacherName.value.trim() !== '') {
+//   //   fetchAvailableWeeks()
+//   // }
+// })
 </script>
 
 <template>
@@ -67,31 +115,86 @@ onMounted(() => {
         flex="~ col"
         gap="8"
     >
+        <ui-spinner
+            v-if="state.isFetching"
+            fullwidth
+        />
+        <ui-alert
+            v-if="state.message"
+            v-model="state.message"
+            @close="clearMessage"
+        />
         <div
             flex="~ col"
             gap="4"
         >
             <div
-                text="2xl"
-                font="bold"
+
+                flex
+                items-center
+                justify-between
+                gap-12
             >
-                Введите ФИО преподавателя
+                <div>
+                    <div
+                        text="2xl"
+                        font="bold"
+                    >
+                        Преподаватель
+                    </div>
+                    <div>
+                        Введите ФИО преподавателя
+                    </div>
+                </div>
+
+                <ui-button
+                    icon="i-ph:plus"
+                    h-fit
+                    color="green"
+                    rounded="full"
+                    :disabled="state.isFetching"
+                    @click="addTeacher"
+                />
             </div>
             <div
-                flex
-                gap-2
+                flex="~ col"
+                gap-4
             >
-                <ui-input-text
-                    v-model="teacherName"
-                    placeholder="ФИО преподавателя"
-                />
-                <ui-button @click="submitTeacherName">
+                <div
+                    flex="~ col"
+                    gap-2
+                >
+                    <div
+                        v-for="(teacher, index) in teacherName"
+                        :key="index"
+                        flex
+                        justify-between
+                        gap-4
+                    >
+                        <ui-input-text
+                            :model-value="teacher"
+                            w-full
+                            placeholder="ФИО преподавателя"
+                            @update:model-value="updateTeacherName(index, $event)"
+                        />
+                        <ui-button
+                            icon="i-ph:trash"
+                            h-fit
+                            rounded="full"
+                            color="red"
+                            :disabled="teacherName.length <= 1 || state.isFetching"
+                            @click="removeTeacher(teacher)"
+                        />
+                    </div>
+                </div>
+                <ui-button
+                    :disabled="state.isFetching"
+                    @click="submitTeacherName"
+                >
                     Отправить
                 </ui-button>
             </div>
         </div>
-
-        {{ selectedWeeks }}
 
         <div
             v-if="availableWeeks.length > 0"
@@ -120,7 +223,10 @@ onMounted(() => {
                     />
                 </div>
             </div>
-            <ui-button @click="submitSelectedWeeks">
+            <ui-button
+                :disabled="state.isFetching"
+                @click="submitSelectedWeeks"
+            >
                 Сохранить выбранные недели
             </ui-button>
         </div>

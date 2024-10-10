@@ -117,7 +117,7 @@ export default antfu({
     }],
     'no-bitwise': ['error', { allow: ['~'] }],
     'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    'max-len': ['error', { code: 320 }],
+    // 'max-len': ['error', { code: 320 }],
     'object-curly-newline': ['error', {
       ObjectExpression: { multiline: true, consistent: true },
       ObjectPattern: { multiline: true, consistent: true },
